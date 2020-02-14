@@ -1,0 +1,13 @@
+train_data_path:
+  1:
+    type: 'a'
+    scp_path: /home/ruchao/workdir/spapl-kaldi/egs/OGI/sspapl/data/test/feats.scp 
+    phrase_label: /home/ruchao/workdir/spapl-kaldi/egs/OGI/sspapl/data/test/utt2age
+    speaker_label: /home/ruchao/workdir/spapl-kaldi/egs/OGI/sspapl/data/test/utt2age 
+  2:
+    type: 'b'
+    scp_path: /home/ruchao/workdir/spapl-kaldi/egs/OGI/sspapl/data/dev/feats.scp 
+    phrase_label: /home/ruchao/workdir/spapl-kaldi/egs/OGI/sspapl/data/dev/utt2age 
+    speaker_label: /home/ruchao/workdir/spapl-kaldi/egs/OGI/sspapl/data/dev/utt2age 
+
+
