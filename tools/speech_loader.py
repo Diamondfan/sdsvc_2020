@@ -3,11 +3,11 @@
 import torch
 import kaldiio
 from torch.utils.data import Dataset, DataLoader
-from feat_op import *
+from tools.feat_op import *
 
 class SingleSet(object):
     def __init__(self, data_path):
-        self.name = data_path['type']
+        self.name = data_path['name']
         scp_path = data_path['scp_path']
         ark_dict = self._load_feature(scp_path)
         
@@ -78,7 +78,7 @@ class SpeechDataset(Dataset):
 
     def _load_streams(self, data_paths):
         data_streams = []
-        for i in data_paths:
+        for i in range(len(data_paths)):
             stream = SingleSet(data_paths[i])
             data_streams.append(stream)
         return data_streams
@@ -115,8 +115,8 @@ class SpeechDataLoader(DataLoader):
                                                 shuffle=shuffle,
                                                 num_workers=num_workers,
                                                 collate_fn=self.collate_fn,
-                                                drop_last=False)
-                                                #timeout=timeout)
+                                                drop_last=False,
+                                                timeout=timeout)
 
     def collate_fn(self, batch):
         feats_max_length = max(x[1].shape[0] for x in batch)
