@@ -1,5 +1,5 @@
 
-input_size: 160
+input_size: 40
 N: 4
 N_embed: 1
 d_model: 512
@@ -9,8 +9,8 @@ dropout: 0.1
 
 num_feature: 40
 left_ctx: 0
-right_ctx: 3
-skip_frame: 4
+right_ctx: 0
+skip_frame: 1
 
 use_gpu: True
 

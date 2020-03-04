@@ -2,6 +2,7 @@
 
 import torch
 import kaldiio
+import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from tools.feat_op import *
 
@@ -70,12 +71,21 @@ class SpeechDataset(Dataset):
         self.left_context = left_context
         self.right_context = right_context
         self.skip_frame = skip_frame     
+        self.use_cmvn = False
         self.data_streams = self._load_streams(data_paths)
         self.data_stream_sizes = [i.get_len() for i in self.data_streams]
         self.data_stream_cum_sizes = [self.data_stream_sizes[0]]
         for i in range(1, len(self.data_stream_sizes)):
             self.data_stream_cum_sizes.append(self.data_stream_cum_sizes[-1] + self.data_stream_sizes[i])
 
+    def _load_cmvn(self, cmvn_file):
+        self.use_cmvn = True
+        cmvn = kaldiio.load_mat(cmvn_file)
+        self.mean = cmvn[0,:-1] / cmvn[0,-1]
+        square = cmvn[1,:-1] / cmvn[0,-1]
+        self.std = np.sqrt(square - np.power(self.mean, 2))
+        return 0
+        
     def _load_streams(self, data_paths):
         data_streams = []
         for i in range(len(data_paths)):
@@ -98,6 +108,9 @@ class SpeechDataset(Dataset):
         
         utt, ark_path, text, phrase, spk = self.data_streams[stream_idx].items[internal_idx]
         feat = kaldiio.load_mat(ark_path)
+        if self.use_cmvn:
+            assert feat.shape[1] == self.mean.shape[0]
+            feat = (feat - self.mean) / self.std
         seq_len, dim = feat.shape
         if seq_len % self.skip_frame != 0:
             pad_len = self.skip_frame - seq_len % self.skip_frame
@@ -124,9 +137,12 @@ class SpeechDataLoader(DataLoader):
         text_max_length = max(len(x[2]) for x in batch)
         batch_size = len(batch)
         
+        feats_max_length = feats_max_length if feats_max_length % 2 == 0 else feats_max_length + 1
         feats = torch.zeros(batch_size, feats_max_length, feat_size)
         texts = torch.zeros(batch_size, text_max_length)
         utt_list = []
+        feat_sizes = torch.zeros(batch_size)
+        text_sizes = torch.zeros(batch_size)
         phrases = []
         speakers = []
 
@@ -138,18 +154,22 @@ class SpeechDataLoader(DataLoader):
             feats[x].narrow(0, 0, feature_length).copy_(torch.Tensor(feature))
             texts[x].narrow(0, 0, text_length).copy_(torch.Tensor(text))
             utt_list.append(utt)
+            feat_sizes[x] = feature_length if feature_length % 2 == 0 else feature_length + 1
+            text_sizes[x] = text_length
             phrases.append(phrase)
             speakers.append(speaker)
-        return utt_list, feats.float(), texts.long(), torch.LongTensor(phrases), torch.LongTensor(speakers)
+        return utt_list, feats.float(), texts.long(), feat_sizes.long(), text_sizes.long(), torch.LongTensor(phrases), torch.LongTensor(speakers)
 
 if __name__ == "__main__":
     import yaml
     data_paths = yaml.safe_load(open('config/data.yaml', 'r'))
     train_dataset = SpeechDataset(data_paths['train_data_path'])
+    train_dataset._load_cmvn('data/fbank/train_global_cmvn.txt')
+    print(train_dataset[0])
     train_loader = SpeechDataLoader(train_dataset, batch_size=10, shuffle=False)
-    for i, data in enumerate(train_loader):
-        utt_list, feats, text, phrase, speaker = data
-        print(speaker.size())
-        break
+    #for i, data in enumerate(train_loader):
+    #    utt_list, feats, text, phrase, speaker = data
+    #    print(speaker.size())
+    #    break
 
 

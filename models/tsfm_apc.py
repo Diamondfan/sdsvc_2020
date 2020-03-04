@@ -22,13 +22,16 @@ class SharedEncoder(nn.Module):
         self.embedding = enc_layer
         self.predictor = predict_layer
         
-    def forward(self, x, mask):
+    def forward(self, x, mask, activation=False):
         "Pass the input (and mask) through each layer in turn."
         x = self.embedding(x)
         for layer in self.layers:
             x = layer(x, mask)
         x = self.norm(x)
-        return self.predictor(x)
+        if activation:
+            return x
+        else:
+            return self.predictor(x)
 
 def make_model(input_size, N=6, N_embed=2, d_model=512, d_ff=2048, h=8, dropout=0.1):
     c = copy.deepcopy

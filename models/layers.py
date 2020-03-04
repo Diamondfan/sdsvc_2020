@@ -154,4 +154,22 @@ class FeatureEmbedding(nn.Module):
             inputs = self.dropout(self.relu(layer(inputs)))
         return inputs
 
+class StatsPoolingLayer(nn.Module):
+    def __init__(self):
+        super(StatsPoolingLayer, self).__init__()
+
+    def forward(self, x, num_frs=None):
+        mean = []
+        std = []
+        for e, l in enumerate(x):
+            size = num_frs[e].item()
+            mean.append(torch.mean(x[e:e+1,:size,:], dim=1))
+            std.append(torch.std(x[e:e+1,:size,:], dim=1))
+        mean = torch.cat(mean, dim=0)
+        std = torch.cat(std, dim=0)
+        #mean = torch.mean(x, dim=1)
+        #std = torch.std(x, dim=1)
+        return torch.cat((mean, std), dim=1)
+
+
 

@@ -1,0 +1,31 @@
+encoder:
+  input_size: 40
+  N: 4
+  N_embed: 1
+  d_model: 512
+  d_ff: 1024
+  h: 8
+  dropout: 0.1
+asr_decoder:
+  N_ctc: 3
+  d_hidden: 320
+  bidirection: True
+  phone_size: 39
+  phrase_size: 11
+  dropout: 0.1
+  use_phrase: False
+  d_te: 400
+test_data:
+  1:
+    name: 'test_deepmine'
+    scp_path: 'data/test_deepmine/feats.scp'
+
+global_cmvn: 'data/fbank/train_global_cmvn.txt'
+
+num_feature: 40
+left_ctx: 0
+right_ctx: 0
+skip_frame: 1
+
+use_gpu: True
+

@@ -23,13 +23,15 @@ class RNNSharedEncoder(nn.Module):
         self.embedding = enc_layer
         self.predictor = predict_layer
         
-    def forward(self, x):
+    def forward(self, x, activation=False):
         x = self.embedding(x)
         for layer in self.layers:
-            x, _ = layer(x)
-            x = self.dropout(x)
-            x = self.norm(x)
-        return self.predictor(x)
+            y, _ = layer(self.norm(x))
+            x = x + self.dropout(y)
+        if activation:
+            return x
+        else:
+            return self.predictor(x)
 
 def make_model(input_size, N=6, N_embed=2, d_model=512, d_ff=2048, h=8, dropout=0.1):
     model = RNNSharedEncoder(
